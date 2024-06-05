@@ -1,2 +1,2 @@
-## Youtube Like Platfor
+## Youtube Like Platform
 This is backend of youtube
