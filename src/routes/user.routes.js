@@ -8,7 +8,7 @@ import {
   getCurrentUser,
   updateAccountDetails,
   updateUserAvatar,
-  updateUserCoverImage
+  updateUserCoverImage,
 } from "../controllers/user.controllers.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -35,19 +35,11 @@ router.route("/refresh-token").post(refreshAccessToken);
 router.route("/change-password").patch(verifyJWT, changeCurrentPassword);
 router.route("/current-user").get(verifyJWT, getCurrentUser);
 router.route("/update").patch(verifyJWT, updateAccountDetails);
-router.route("/update-avatar").patch(
-  verifyJWT,
-  upload.field({
-    name: "avatar",
-  }),
-  updateUserAvatar
-);
-router.route("/update-cover-image").patch(
-  verifyJWT,
-  upload.field({
-    name: "coverImage",
-  }),
-  updateUserCoverImage
-);
+router
+  .route("/update-avatar")
+  .patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
+router
+  .route("/update-cover-image")
+  .patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage);
 
 export default router;

@@ -2,7 +2,10 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import {
+  uploadOnCloudinary,
+  deleteFromCloudinary,
+} from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
 
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -21,6 +24,19 @@ const generateAccessAndRefreshTokens = async (userId) => {
       500,
       "Something went wrong while generating Refresh & Access Tokens"
     );
+  }
+};
+
+const getCloudinaryPublicId = (url) => {
+  // Regular expression to match the Cloudinary URL and capture the public ID
+  const regex = /\/(?:v\d+\/)?([^\/]+)\.[a-zA-Z]+$/;
+  const match = url.match(regex);
+
+  if (match) {
+    const publicId = match[1]; // Extract the public ID without the extension
+    return publicId;
+  } else {
+    throw new ApiError(400, "Invalid Cloudinary URL");
   }
 };
 
@@ -260,27 +276,29 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 });
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
-  
   const avatarLocalPath = req.file?.path;
+  const pid = getCloudinaryPublicId(req.user.avatar);
 
-  if(!avatarLocalPath){
+  if (!avatarLocalPath) {
     throw new ApiError(400, "avatar Local Path is missing!");
   }
 
   const avatar = await uploadOnCloudinary(avatarLocalPath);
-  if(!avatar.url){
+  if (!avatar.url) {
     throw new ApiError(400, "Error while uploading avatar");
   }
 
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
-      $set : {
-        avatar : avatar.url
-      }
+      $set: {
+        avatar: avatar.url,
+      },
     },
-    {new : true}
+    { new: true }
   ).select("-password -refreshToken");
+
+  await deleteFromCloudinary(pid);
 
   return res
     .status(200)
@@ -288,27 +306,29 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 });
 
 const updateUserCoverImage = asyncHandler(async (req, res) => {
-  
   const coverImageLocalPath = req.file?.path;
+  const pid = getCloudinaryPublicId(req.user.coverImage);
 
-  if(!coverImageLocalPath){
+  if (!coverImageLocalPath) {
     throw new ApiError(400, "cover Image Local Path is missing!");
   }
 
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-  if(!coverImage.url){
+  if (!coverImage.url) {
     throw new ApiError(400, "Error while uploading coverImage");
   }
 
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
-      $set : {
-        coverImage : coverImage.url
-      }
+      $set: {
+        coverImage: coverImage.url,
+      },
     },
-    {new : true}
+    { new: true }
   ).select("-password -refreshToken");
+
+  await deleteFromCloudinary(pid);
 
   return res
     .status(200)
@@ -324,5 +344,5 @@ export {
   getCurrentUser,
   updateAccountDetails,
   updateUserAvatar,
-  updateUserCoverImage
+  updateUserCoverImage,
 };
