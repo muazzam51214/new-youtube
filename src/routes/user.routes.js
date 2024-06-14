@@ -10,6 +10,7 @@ import {
   updateUserAvatar,
   updateUserCoverImage,
   addCoverImage,
+  getUserChannelProfile
 } from "../controllers/user.controllers.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -52,5 +53,9 @@ router
 router
   .route("/add-cover-image")
   .patch(verifyJWT, upload.single("coverImage"), addCoverImage);
+
+router
+  .route("/get-channel/:username")
+  .get(verifyJWT, getUserChannelProfile);
 
 export default router;
