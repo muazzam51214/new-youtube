@@ -33,6 +33,7 @@ const uploadOnCloudinary = async (localFilePath) => {
 const deleteFromCloudinary = async (publicId) => {
   try {
     const response = await cloudinary.uploader.destroy(publicId);
+    console.log("old avatar deleted from cloudinary!");
     return response;
   } catch (error) {
     console.log("Error while Deleting File From Cloudinary ", error);
